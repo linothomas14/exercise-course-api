@@ -24,20 +24,20 @@ var (
 	userRepository           repository.UserRepository           = repository.NewUserRepository(db)
 	courseCategoryRepository repository.CourseCategoryRepository = repository.NewCourseCategoryRepository(db)
 	courseRepository         repository.CourseRepository         = repository.NewCourseRepository(db)
-	// attendanceRepository repository.AttendanceRepository = repository.NewAttendanceRepository(db)
+	adminRepository          repository.AdminRepository          = repository.NewAdminRepository(db)
 	// // 	transactionRepository  repository.TransactionRepository  = repository.NewTransactionRepository(db)
 	// // jwtService  service.JWTService  = service.NewJWTService()
-	// userService       service.UserService       = service.NewUserService(userRepository)
-	// authService       service.AuthService       = service.NewAuthService(userRepository)
-	jwtService            service.AuthService           = service.NewAuthService(userRepository)
+	userService service.UserService = service.NewUserService(userRepository)
+	authService service.AuthService = service.NewAuthService(userRepository, adminRepository)
+
 	courseCategoryService service.CourseCategoryService = service.NewCourseCategoryService(courseCategoryRepository)
 	courseService         service.CourseService         = service.NewCourseService(courseRepository)
 	// attendanceService service.AttendanceService = service.NewAttendanceService(attendanceRepository, userRepository, courseCategoryRepository)
 
 	// // 	transactionService  service.TransactionService  = service.NewTransactionService(transactionRepository, productRepository)
 
-	// authController       controller.AuthController       = controller.NewAuthController(authService)
-	// userController       controller.UserController       = controller.NewUserController(userService)
+	authController           controller.AuthController           = controller.NewAuthController(authService, userService)
+	userController           controller.UserController           = controller.NewUserController(userService)
 	courseCategoryController controller.CourseCategoryController = controller.NewCourseCategoryController(courseCategoryService)
 	courseController         controller.CourseController         = controller.NewCourseController(courseService)
 	// attendanceController controller.AttendanceController = controller.NewAttendanceController(attendanceService)
@@ -55,23 +55,25 @@ func main() {
 	defer config.CloseDatabaseConnection(db)
 	r := gin.Default()
 
-	r.POST("/login", PingHandler)
-	r.POST("/register", PingHandler)
+	r.POST("/login", authController.Login) //login for user
+	r.POST("/register", authController.Register)
+	r.POST("/login-admin", authController.Login)
 
-	authRoutes := r.Group("admins", middleware.AuthorizeJWT(jwtService))
+	authRoutes := r.Group("admins", middleware.AuthorizeJWT(authService))
 	{
-		authRoutes.POST("/", PingHandler)
-		authRoutes.GET("/:idAdmin", PingHandler)
-		authRoutes.PUT("/:idAdmin", PingHandler)
-		authRoutes.DELETE("/:idAdmin", PingHandler)
+
+		authRoutes.POST("/", PingHandler) //register new admin
+		authRoutes.GET("/", PingHandler)
+		authRoutes.GET("/:id", PingHandler)
+		authRoutes.PUT("/:id", PingHandler)
+		authRoutes.DELETE("/:id", PingHandler)
 	}
 
-	userRoutes := r.Group("users", middleware.AuthorizeJWT(jwtService))
+	userRoutes := r.Group("users", middleware.AuthorizeJWT(authService))
 	{
-		userRoutes.GET("/", PingHandler)
-		userRoutes.GET("/:idUser", PingHandler)
-		userRoutes.PUT("/:idUser", PingHandler)
-		userRoutes.DELETE("/delete", PingHandler)
+		userRoutes.GET("/", userController.GetProfile)
+		userRoutes.PUT("/:id", PingHandler)
+		userRoutes.DELETE("/:id", PingHandler)
 	}
 
 	courseRoutes := r.Group("courses")
@@ -82,7 +84,7 @@ func main() {
 		courseRoutes.PUT("/:id", PingHandler)
 		courseRoutes.DELETE("/:id", PingHandler)
 	}
-	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT(jwtService))
+	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT(authService))
 	{
 		attendanceRoutes.GET("/", PingHandler)
 		attendanceRoutes.POST("/", PingHandler)

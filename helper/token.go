@@ -17,7 +17,6 @@ func TokenGenerator() string {
 
 func GetUserIdFromClaims(ctx *gin.Context) int {
 	userClaims, ok := ctx.Get("user_id")
-
 	if !ok {
 		response := BuildResponse("Cant get user_id from claims", EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, response)
@@ -34,4 +33,18 @@ func GetUserIdFromClaims(ctx *gin.Context) int {
 	userID := int(id)
 
 	return userID
+}
+
+func GetRoleFromClaims(ctx *gin.Context) string {
+	userClaims, ok := ctx.Get("role")
+
+	if !ok {
+		response := BuildResponse("Cant get role from claims", EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return ""
+	}
+
+	str := fmt.Sprintf("%v", userClaims)
+
+	return str
 }

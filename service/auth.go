@@ -7,20 +7,17 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/linothomas14/exercise-course-api/helper/param"
-	"github.com/linothomas14/exercise-course-api/model"
 
+	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/repository"
-	"github.com/mashingan/smapping"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService interface {
-	Login(email string, password string) (string, error)
-	CreateUser(user param.Register) (model.User, error)
-	FindByEmail(email string) model.User
+	Login(email string, password string, role string) (string, error)
+
 	IsDuplicateEmail(email string) bool
-	GenerateToken(UserID int) string
+	GenerateToken(UserID int, role string) string
 	ValidateToken(token string) (*jwt.Token, error)
 }
 
@@ -30,45 +27,48 @@ type jwtCustomClaim struct {
 }
 
 type authService struct {
-	secretKey      string
-	issuer         string
-	userRepository repository.UserRepository
+	secretKey       string
+	issuer          string
+	userRepository  repository.UserRepository
+	adminRepository repository.AdminRepository
 }
 
-func NewAuthService(userRep repository.UserRepository) AuthService {
+type actor struct {
+	id       uint32
+	email    string
+	password string
+}
+
+func NewAuthService(userRep repository.UserRepository, adminRep repository.AdminRepository) AuthService {
 	return &authService{
-		userRepository: userRep,
+		userRepository:  userRep,
+		adminRepository: adminRep,
 	}
 }
 
-func (service *authService) Login(email string, password string) (string, error) {
+func (service *authService) Login(email string, password string, role string) (string, error) {
 	var err error
-	user := service.userRepository.FindByEmail(email)
-	comparedPassword := comparePassword(user.Password, []byte(password))
+
+	var actorStruct actor
+
+	if role == "admin" {
+		admin := service.adminRepository.FindByEmail(email)
+		actorStruct = parseActor(admin.ID, admin.Email, admin.Password)
+
+	} else {
+		user := service.userRepository.FindByEmail(email)
+		actorStruct = parseActor(user.ID, user.Email, user.Password)
+
+	}
+
+	comparedPassword := comparePassword(actorStruct.password, []byte(password))
+
 	if comparedPassword != true {
 		return "", err
 	}
-	token := service.GenerateToken(int(user.ID))
+	token := service.GenerateToken(int(actorStruct.id), role)
 
 	return token, err
-}
-
-func (service *authService) CreateUser(user param.Register) (model.User, error) {
-	userToCreate := model.User{}
-	err := smapping.FillStruct(&userToCreate, smapping.MapFields(&user))
-	if err != nil {
-		log.Fatalf("Failed map %v", err)
-		return userToCreate, err
-	}
-	res, err := service.userRepository.InsertUser(userToCreate)
-	if err != nil {
-		return userToCreate, err
-	}
-	return res, err
-}
-
-func (service *authService) FindByEmail(email string) model.User {
-	return service.userRepository.FindByEmail(email)
 }
 
 func (service *authService) IsDuplicateEmail(email string) bool {
@@ -94,17 +94,16 @@ func getSecretKey() string {
 	return secretKey
 }
 
-func (j *authService) GenerateToken(UserID int) string {
+func (j *authService) GenerateToken(UserID int, role string) string {
 
 	j.issuer = "lino"
 	j.secretKey = getSecretKey()
-	claims := &jwtCustomClaim{
-		UserID,
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().AddDate(1, 0, 0).Unix(),
-			Issuer:    j.issuer,
-			IssuedAt:  time.Now().Unix(),
-		},
+	claims := &jwt.MapClaims{
+		"user_id":   UserID,
+		"role":      role,
+		"ExpiresAt": time.Now().AddDate(1, 0, 0).Unix(),
+		"Issuer":    j.issuer,
+		"IssuedAt":  time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -126,4 +125,13 @@ func (j *authService) ValidateToken(token string) (*jwt.Token, error) {
 
 func extractClaim(tokenString string) string {
 	return ""
+}
+
+func parseActor(id uint32, email string, password string) actor {
+	var actorStruct actor
+	actorStruct.id = id
+	actorStruct.email = email
+	actorStruct.password = password
+
+	return actorStruct
 }
