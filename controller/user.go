@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/helper"
+	"github.com/linothomas14/exercise-course-api/helper/param"
 	"github.com/linothomas14/exercise-course-api/helper/response"
 	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/service"
@@ -56,11 +57,10 @@ func (c *userController) GetProfile(ctx *gin.Context) {
 
 func (c *userController) Update(ctx *gin.Context) {
 
-	var userParam model.User
+	var userParam param.UserUpdate
+	var user model.User
 
 	userID := helper.GetUserIdFromClaims(ctx)
-
-	userParam.ID = uint32(userID)
 
 	err := ctx.ShouldBind(&userParam)
 	if err != nil {
@@ -76,13 +76,27 @@ func (c *userController) Update(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
 		return
 	}
-	user, err := c.userService.Update(userParam)
+
+	user = parseUserUpdate(userParam)
+	user.ID = uint32(userID)
+	res, err := c.userService.Update(user)
 
 	if err != nil {
 		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.BuildResponse("Updated", user)
+	response := helper.BuildResponse("Updated", res)
 	ctx.JSON(http.StatusOK, response)
+}
+
+func parseUserUpdate(userParam param.UserUpdate) model.User {
+	var user model.User
+
+	user.Name = userParam.Name
+	user.Email = userParam.Email
+	user.Password = userParam.Password
+
+	return user
+
 }

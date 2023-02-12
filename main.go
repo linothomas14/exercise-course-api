@@ -72,7 +72,7 @@ func main() {
 	userRoutes := r.Group("users", middleware.AuthorizeJWT(authService))
 	{
 		userRoutes.GET("/", userController.GetProfile)
-		userRoutes.PUT("/:id", PingHandler)
+		userRoutes.PUT("/", userController.Update)
 		userRoutes.DELETE("/:id", PingHandler)
 	}
 
