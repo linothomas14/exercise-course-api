@@ -14,6 +14,7 @@ type UserRepository interface {
 	IsDuplicateEmail(email string) model.User
 	FindByEmail(email string) model.User
 	GetUser(userID int) (model.User, error)
+	Delete(uint32) error
 }
 
 type userConnection struct {
@@ -65,4 +66,18 @@ func (db *userConnection) GetUser(userId int) (model.User, error) {
 	var user model.User
 	err := db.connection.Find(&user, userId).Error
 	return user, err
+}
+
+func (db *userConnection) Delete(userId uint32) error {
+	var user model.User
+	user.ID = userId
+	err := db.connection.First(&user).Error
+
+	if err != nil {
+		return err
+	}
+
+	err = db.connection.Delete(&user).Error
+
+	return err
 }

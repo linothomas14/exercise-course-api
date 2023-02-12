@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/helper"
@@ -14,6 +15,7 @@ import (
 type UserController interface {
 	GetProfile(context *gin.Context)
 	Update(context *gin.Context)
+	Delete(context *gin.Context)
 }
 
 type userController struct {
@@ -88,6 +90,29 @@ func (c *userController) Update(ctx *gin.Context) {
 	}
 	response := helper.BuildResponse("Updated", res)
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *userController) Delete(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	u64, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	userId := uint32(u64)
+
+	err = c.userService.Delete(userId)
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.BuildResponse("User id "+id+" was deleted", helper.EmptyObj{})
+	ctx.JSON(http.StatusOK, response)
+
 }
 
 func parseUserUpdate(userParam param.UserUpdate) model.User {

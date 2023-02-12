@@ -73,7 +73,7 @@ func main() {
 	{
 		userRoutes.GET("/", userController.GetProfile)
 		userRoutes.PUT("/", userController.Update)
-		userRoutes.DELETE("/:id", PingHandler)
+		userRoutes.DELETE("/:id", userController.Delete)
 	}
 
 	courseRoutes := r.Group("courses")

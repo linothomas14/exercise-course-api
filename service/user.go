@@ -16,6 +16,7 @@ type UserService interface {
 	FindByEmail(email string) model.User
 	Update(user model.User) (response.UserResponse, error)
 	GetProfile(userId int) (response.UserResponse, error)
+	Delete(userId uint32) error
 }
 
 type userService struct {
@@ -80,4 +81,11 @@ func (service *userService) GetProfile(userId int) (response.UserResponse, error
 
 func (service *userService) FindByEmail(email string) model.User {
 	return service.userRepository.FindByEmail(email)
+}
+
+func (service *userService) Delete(id uint32) error {
+
+	err := service.userRepository.Delete(id)
+
+	return err
 }
