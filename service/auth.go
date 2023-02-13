@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -18,7 +17,7 @@ type AuthService interface {
 
 	IsDuplicateEmail(email string) bool
 	GenerateToken(UserID int, role string) string
-	ValidateToken(token string) (*jwt.Token, error)
+	// ValidateToken(token string) (*jwt.Token, error)
 }
 
 type jwtCustomClaim struct {
@@ -112,15 +111,6 @@ func (j *authService) GenerateToken(UserID int, role string) string {
 		panic(err)
 	}
 	return t
-}
-
-func (j *authService) ValidateToken(token string) (*jwt.Token, error) {
-	return jwt.Parse(token, func(t_ *jwt.Token) (interface{}, error) {
-		if _, ok := t_.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method %v", t_.Header["alg"])
-		}
-		return []byte(j.secretKey), nil
-	})
 }
 
 func extractClaim(tokenString string) string {

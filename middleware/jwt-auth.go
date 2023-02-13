@@ -3,16 +3,16 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/helper"
-	"github.com/linothomas14/exercise-course-api/service"
 )
 
 //AuthorizeJWT validates the token user given, return 401 if not valid
-func AuthorizeJWT(jwtService service.AuthService) gin.HandlerFunc {
+func AuthorizeJWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 
@@ -30,7 +30,7 @@ func AuthorizeJWT(jwtService service.AuthService) gin.HandlerFunc {
 
 		authHeader = strings.Replace(authHeader, "Bearer ", "", -1)
 
-		token, err := jwtService.ValidateToken(authHeader)
+		token, err := ValidateToken(authHeader)
 
 		if err != nil {
 			response := helper.BuildResponse(err.Error(), nil)
@@ -99,4 +99,18 @@ func GetRoleFromClaims(ctx *gin.Context) string {
 	str := fmt.Sprintf("%v", userClaims)
 
 	return str
+}
+
+func ValidateToken(token string) (*jwt.Token, error) {
+	return jwt.Parse(token, func(t_ *jwt.Token) (interface{}, error) {
+		if _, ok := t_.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method %v", t_.Header["alg"])
+		}
+		return []byte(getSecretKey()), nil
+	})
+}
+
+func getSecretKey() string {
+	secretKey := os.Getenv("JWT_SECRET")
+	return secretKey
 }

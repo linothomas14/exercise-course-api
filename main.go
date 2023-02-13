@@ -50,7 +50,7 @@ func main() {
 	r.POST("/register", authController.Register)
 	r.POST("/login-admin", authController.Login)
 
-	adminRoutes := r.Group("admins", middleware.AuthorizeJWTAdminOnly())
+	adminRoutes := r.Group("admins", middleware.AuthorizeJWT(), middleware.AuthorizeJWTAdminOnly())
 	{
 
 		adminRoutes.POST("/", adminController.Register) //register new admin
@@ -59,7 +59,7 @@ func main() {
 		adminRoutes.PUT("/:id", PingHandler)
 		adminRoutes.DELETE("/:id", PingHandler)
 	}
-	userRoutes := r.Group("users", middleware.AuthorizeJWT(authService))
+	userRoutes := r.Group("users", middleware.AuthorizeJWT())
 	{
 		userRoutes.GET("/", userController.FindAll)
 		userRoutes.GET("/:id", userController.GetUserByID)
@@ -67,7 +67,7 @@ func main() {
 		userRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), userController.Delete)
 	}
 
-	courseRoutes := r.Group("courses", middleware.AuthorizeJWT(authService))
+	courseRoutes := r.Group("courses", middleware.AuthorizeJWT())
 	{
 		courseRoutes.GET("/", courseController.FindAll)
 		courseRoutes.GET("/:id", courseController.FindByID)
@@ -76,7 +76,7 @@ func main() {
 		courseRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
 	}
 
-	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT(authService))
+	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT())
 	{
 		attendanceRoutes.GET("/", PingHandler)
 		attendanceRoutes.POST("/", PingHandler)
