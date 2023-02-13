@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -52,4 +53,50 @@ func AuthorizeJWT(jwtService service.AuthService) gin.HandlerFunc {
 
 	}
 
+}
+
+func AuthorizeJWTAdminOnly() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		role := GetRoleFromClaims(c)
+		if role != "admin" {
+			response := helper.BuildResponse("You must be admin to access this endpoint", nil)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+			return
+		}
+
+	}
+}
+
+func GetUserIdFromClaims(ctx *gin.Context) int {
+	userClaims, ok := ctx.Get("user_id")
+	if !ok {
+		response := helper.BuildResponse("Cant get user_id from claims", helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return 0
+	}
+
+	id, ok := userClaims.(float64)
+
+	if !ok {
+		response := helper.BuildResponse("Cant Parsing user_id", helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return 0
+	}
+	userID := int(id)
+
+	return userID
+}
+
+func GetRoleFromClaims(ctx *gin.Context) string {
+	userClaims, ok := ctx.Get("role")
+
+	if !ok {
+		response := helper.BuildResponse("Cant get role from claims", helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return ""
+	}
+
+	str := fmt.Sprintf("%v", userClaims)
+
+	return str
 }

@@ -3,18 +3,13 @@ package main
 import (
 	"time"
 
-	// "github.com/linothomas14/exercise-course-api/controller"
-	// "github.com/linothomas14/exercise-course-api/middleware"
-	"github.com/linothomas14/exercise-course-api/controller"
-	"github.com/linothomas14/exercise-course-api/repository"
-
-	// "github.com/linothomas14/exercise-course-api/service"
-
-	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/config"
+	"github.com/linothomas14/exercise-course-api/controller"
 	"github.com/linothomas14/exercise-course-api/middleware"
+	"github.com/linothomas14/exercise-course-api/repository"
 	"github.com/linothomas14/exercise-course-api/service"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -25,22 +20,18 @@ var (
 	courseCategoryRepository repository.CourseCategoryRepository = repository.NewCourseCategoryRepository(db)
 	courseRepository         repository.CourseRepository         = repository.NewCourseRepository(db)
 	adminRepository          repository.AdminRepository          = repository.NewAdminRepository(db)
-	// // 	transactionRepository  repository.TransactionRepository  = repository.NewTransactionRepository(db)
-	// // jwtService  service.JWTService  = service.NewJWTService()
-	userService service.UserService = service.NewUserService(userRepository)
-	authService service.AuthService = service.NewAuthService(userRepository, adminRepository)
 
+	userService           service.UserService           = service.NewUserService(userRepository)
+	authService           service.AuthService           = service.NewAuthService(userRepository, adminRepository)
 	courseCategoryService service.CourseCategoryService = service.NewCourseCategoryService(courseCategoryRepository)
 	courseService         service.CourseService         = service.NewCourseService(courseRepository)
-	// attendanceService service.AttendanceService = service.NewAttendanceService(attendanceRepository, userRepository, courseCategoryRepository)
-
-	// // 	transactionService  service.TransactionService  = service.NewTransactionService(transactionRepository, productRepository)
+	adminService          service.AdminService          = service.NewAdminService(adminRepository)
 
 	authController           controller.AuthController           = controller.NewAuthController(authService, userService)
 	userController           controller.UserController           = controller.NewUserController(userService)
 	courseCategoryController controller.CourseCategoryController = controller.NewCourseCategoryController(courseCategoryService)
 	courseController         controller.CourseController         = controller.NewCourseController(courseService)
-	// attendanceController controller.AttendanceController = controller.NewAttendanceController(attendanceService)
+	adminController          controller.AdminController          = controller.NewAdminController(adminService)
 )
 
 func PingHandler(c *gin.Context) {
@@ -59,45 +50,45 @@ func main() {
 	r.POST("/register", authController.Register)
 	r.POST("/login-admin", authController.Login)
 
-	authRoutes := r.Group("admins", middleware.AuthorizeJWT(authService))
+	adminRoutes := r.Group("admins", middleware.AuthorizeJWTAdminOnly())
 	{
 
-		authRoutes.POST("/", PingHandler) //register new admin
-		authRoutes.GET("/", PingHandler)
-		authRoutes.GET("/:id", PingHandler)
-		authRoutes.PUT("/:id", PingHandler)
-		authRoutes.DELETE("/:id", PingHandler)
+		adminRoutes.POST("/", adminController.Register) //register new admin
+		adminRoutes.GET("/", adminController.GetProfile)
+		adminRoutes.GET("/:id", adminController.GetAdminByID)
+		adminRoutes.PUT("/:id", PingHandler)
+		adminRoutes.DELETE("/:id", PingHandler)
 	}
-
 	userRoutes := r.Group("users", middleware.AuthorizeJWT(authService))
 	{
 		userRoutes.GET("/", userController.GetProfile)
 		userRoutes.PUT("/", userController.Update)
-		userRoutes.DELETE("/:id", userController.Delete)
+		userRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), userController.Delete)
 	}
 
-	courseRoutes := r.Group("courses")
+	courseRoutes := r.Group("courses", middleware.AuthorizeJWT(authService))
 	{
 		courseRoutes.GET("/", courseController.FindAll)
 		courseRoutes.GET("/:id", courseController.FindByID)
-		courseRoutes.POST("/", courseController.Create)
-		courseRoutes.PUT("/:id", PingHandler)
-		courseRoutes.DELETE("/:id", PingHandler)
+		courseRoutes.POST("/", middleware.AuthorizeJWTAdminOnly(), courseController.Create)
+		courseRoutes.PUT("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
+		courseRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
 	}
+
 	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT(authService))
 	{
 		attendanceRoutes.GET("/", PingHandler)
 		attendanceRoutes.POST("/", PingHandler)
-		attendanceRoutes.DELETE("/:idUserCourse", PingHandler)
+		attendanceRoutes.DELETE("/:idUserCourse", PingHandler) //delete their course, cant delete other user course
 	}
 
 	CourseCategoryRoutes := r.Group("course-category")
 	{
 		CourseCategoryRoutes.GET("/", courseCategoryController.FindAll)
 		CourseCategoryRoutes.GET("/:id", courseCategoryController.FindByID)
-		CourseCategoryRoutes.POST("/", courseCategoryController.Create)
-		CourseCategoryRoutes.PUT("/:id", courseCategoryController.Update)
-		CourseCategoryRoutes.DELETE("/:id", courseCategoryController.Delete)
+		CourseCategoryRoutes.POST("/", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Create)
+		CourseCategoryRoutes.PUT("/:id", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Update)
+		CourseCategoryRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Delete)
 	}
 
 	r.GET("ping", PingHandler)

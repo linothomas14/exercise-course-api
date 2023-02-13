@@ -8,6 +8,7 @@ import (
 	"github.com/linothomas14/exercise-course-api/helper"
 	"github.com/linothomas14/exercise-course-api/helper/param"
 	"github.com/linothomas14/exercise-course-api/helper/response"
+	"github.com/linothomas14/exercise-course-api/middleware"
 	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/service"
 )
@@ -31,8 +32,8 @@ func NewUserController(userService service.UserService) UserController {
 func (c *userController) GetProfile(ctx *gin.Context) {
 	var user response.UserResponse
 
-	userID := helper.GetUserIdFromClaims(ctx)
-	userRole := helper.GetRoleFromClaims(ctx)
+	userID := middleware.GetUserIdFromClaims(ctx)
+	userRole := middleware.GetRoleFromClaims(ctx)
 	if userID == 0 {
 		response := helper.BuildResponse("there is error occur", helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, response)
@@ -62,7 +63,7 @@ func (c *userController) Update(ctx *gin.Context) {
 	var userParam param.UserUpdate
 	var user model.User
 
-	userID := helper.GetUserIdFromClaims(ctx)
+	userID := middleware.GetUserIdFromClaims(ctx)
 
 	err := ctx.ShouldBind(&userParam)
 	if err != nil {
@@ -93,6 +94,15 @@ func (c *userController) Update(ctx *gin.Context) {
 }
 
 func (c *userController) Delete(ctx *gin.Context) {
+
+	userRole := middleware.GetRoleFromClaims(ctx)
+
+	if userRole != "admin" {
+		response := helper.BuildResponse("You dont have access to delete user", helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
 	id := ctx.Param("id")
 
 	u64, err := strconv.ParseUint(id, 10, 32)
