@@ -12,6 +12,7 @@ import (
 )
 
 type UserService interface {
+	FindAll() ([]response.UserResponse, error)
 	CreateUser(user param.Register) (model.User, error)
 	FindByEmail(email string) model.User
 	Update(user model.User) (response.UserResponse, error)
@@ -27,6 +28,18 @@ func NewUserService(userRep repository.UserRepository) UserService {
 	return &userService{
 		userRepository: userRep,
 	}
+}
+
+func (service *userService) FindAll() ([]response.UserResponse, error) {
+
+	user, err := service.userRepository.FindAll()
+
+	users := parseFindAllUser(user)
+	if err != nil {
+		return []response.UserResponse{}, err
+	}
+
+	return users, err
 }
 
 func (service *userService) CreateUser(user param.Register) (model.User, error) {
@@ -88,4 +101,17 @@ func (service *userService) Delete(id uint32) error {
 	err := service.userRepository.Delete(id)
 
 	return err
+}
+
+func parseFindAllUser(users []model.User) []response.UserResponse {
+	var parsedUser []response.UserResponse
+	for _, user := range users {
+		newCourse := response.UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Email: user.Email,
+		}
+		parsedUser = append(parsedUser, newCourse)
+	}
+	return parsedUser
 }

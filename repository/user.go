@@ -8,6 +8,7 @@ import (
 
 //UserRepository is contract what userRepository can do to db
 type UserRepository interface {
+	FindAll() ([]model.User, error)
 	InsertUser(user model.User) (model.User, error)
 	UpdateUser(user model.User) (model.User, error)
 	VerifyCredential(email string, password string) interface{}
@@ -26,6 +27,18 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userConnection{
 		connection: db,
 	}
+}
+func (db *userConnection) FindAll() ([]model.User, error) {
+
+	var user []model.User
+
+	err := db.connection.Find(&user).Error
+
+	if err != nil {
+		return []model.User{}, err
+	}
+
+	return user, err
 }
 
 func (db *userConnection) InsertUser(user model.User) (model.User, error) {
@@ -64,7 +77,7 @@ func (db *userConnection) FindByEmail(email string) model.User {
 
 func (db *userConnection) GetUser(userId int) (model.User, error) {
 	var user model.User
-	err := db.connection.Find(&user, userId).Error
+	err := db.connection.First(&user, userId).Error
 	return user, err
 }
 

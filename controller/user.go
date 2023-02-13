@@ -14,7 +14,9 @@ import (
 )
 
 type UserController interface {
+	FindAll(context *gin.Context)
 	GetProfile(context *gin.Context)
+	GetUserByID(context *gin.Context)
 	Update(context *gin.Context)
 	Delete(context *gin.Context)
 }
@@ -57,6 +59,36 @@ func (c *userController) GetProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 
 }
+func (c *userController) GetUserByID(ctx *gin.Context) {
+	var user response.UserResponse
+
+	userID := ctx.Param("id")
+
+	ID, err := strconv.Atoi(userID)
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	if ID == 0 {
+		response := helper.BuildResponse("there is error occur", helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	user, err = c.userService.GetProfile(ID)
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.BuildResponse("OK", user)
+	ctx.JSON(http.StatusOK, response)
+
+}
 
 func (c *userController) Update(ctx *gin.Context) {
 
@@ -93,15 +125,19 @@ func (c *userController) Update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (c *userController) Delete(ctx *gin.Context) {
+func (c *userController) FindAll(ctx *gin.Context) {
+	users, err := c.userService.FindAll()
 
-	userRole := middleware.GetRoleFromClaims(ctx)
-
-	if userRole != "admin" {
-		response := helper.BuildResponse("You dont have access to delete user", helper.EmptyObj{})
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
+	response := helper.BuildResponse("OK", users)
+	ctx.JSON(http.StatusOK, response)
+}
+
+func (c *userController) Delete(ctx *gin.Context) {
 
 	id := ctx.Param("id")
 

@@ -61,7 +61,8 @@ func main() {
 	}
 	userRoutes := r.Group("users", middleware.AuthorizeJWT(authService))
 	{
-		userRoutes.GET("/", userController.GetProfile)
+		userRoutes.GET("/", userController.FindAll)
+		userRoutes.GET("/:id", userController.GetUserByID)
 		userRoutes.PUT("/", userController.Update)
 		userRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), userController.Delete)
 	}
