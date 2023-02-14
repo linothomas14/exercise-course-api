@@ -38,7 +38,7 @@ func (db *courseConnection) FindAll() ([]model.Course, error) {
 
 	var course []model.Course
 
-	err := db.connection.Find(&course).Error
+	err := db.connection.Preload("CourseCategory").Find(&course).Error
 
 	if err != nil {
 		return []model.Course{}, err

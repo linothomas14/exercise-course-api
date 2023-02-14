@@ -1,14 +1,13 @@
 package service
 
 import (
-	"github.com/linothomas14/exercise-course-api/helper/response"
 	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/repository"
 )
 
 type CourseService interface {
 	CreateCourse(model.Course) (model.Course, error)
-	FindAll() ([]response.GetCoursesRes, error)
+	FindAll() ([]model.Course, error)
 	FindByID(uint32) (model.Course, error)
 	FindByName(string) (model.Course, error)
 	Update(model.Course) (model.Course, error)
@@ -25,13 +24,13 @@ func NewCourseService(courseRep repository.CourseRepository) CourseService {
 	}
 }
 
-func (service *courseService) FindAll() ([]response.GetCoursesRes, error) {
+func (service *courseService) FindAll() ([]model.Course, error) {
 
-	course, err := service.courseRepository.FindAll()
+	courses, err := service.courseRepository.FindAll()
 
-	courses := parseFindAllCourses(course)
+	// courses := parseFindAllCourses(course)
 	if err != nil {
-		return []response.GetCoursesRes{}, err
+		return []model.Course{}, err
 	}
 
 	return courses, err
@@ -92,15 +91,15 @@ func (service *courseService) Delete(id uint32) error {
 	return err
 }
 
-func parseFindAllCourses(courses []model.Course) []response.GetCoursesRes {
-	var parsedCourses []response.GetCoursesRes
-	for _, course := range courses {
-		newCourse := response.GetCoursesRes{
-			ID:               course.ID,
-			Title:            course.Title,
-			CourseCategoryId: course.CourseCategoryId,
-		}
-		parsedCourses = append(parsedCourses, newCourse)
-	}
-	return parsedCourses
-}
+// func parseFindAllCourses(courses []model.Course) []response.GetCoursesRes {
+// 	var parsedCourses []response.GetCoursesRes
+// 	for _, course := range courses {
+// 		newCourse := response.GetCoursesRes{
+// 			ID:               course.ID,
+// 			Title:            course.Title,
+// 			CourseCategoryId: course.CourseCategoryId,
+// 		}
+// 		parsedCourses = append(parsedCourses, newCourse)
+// 	}
+// 	return parsedCourses
+// }
