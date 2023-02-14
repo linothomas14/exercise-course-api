@@ -49,6 +49,7 @@ func (service *userService) CreateUser(user param.Register) (model.User, error) 
 		log.Fatalf("Failed map %v", err)
 		return userToCreate, err
 	}
+	userToCreate.Password = helper.HashAndSalt([]byte(userToCreate.Password))
 	res, err := service.userRepository.InsertUser(userToCreate)
 	if err != nil {
 		return userToCreate, err

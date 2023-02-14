@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"github.com/linothomas14/exercise-course-api/helper"
 	"github.com/linothomas14/exercise-course-api/model"
 	"gorm.io/gorm"
 )
@@ -43,7 +42,6 @@ func (db *userConnection) FindAll() ([]model.User, error) {
 
 func (db *userConnection) InsertUser(user model.User) (model.User, error) {
 
-	user.Password = helper.HashAndSalt([]byte(user.Password))
 	err := db.connection.Save(&user).Error
 	return user, err
 }
@@ -84,6 +82,7 @@ func (db *userConnection) GetUser(userId int) (model.User, error) {
 func (db *userConnection) Delete(userId uint32) error {
 	var user model.User
 	user.ID = userId
+
 	err := db.connection.First(&user).Error
 
 	if err != nil {

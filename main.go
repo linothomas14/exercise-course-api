@@ -20,18 +20,21 @@ var (
 	courseCategoryRepository repository.CourseCategoryRepository = repository.NewCourseCategoryRepository(db)
 	courseRepository         repository.CourseRepository         = repository.NewCourseRepository(db)
 	adminRepository          repository.AdminRepository          = repository.NewAdminRepository(db)
+	userCourseRepository     repository.UserCourseRepository     = repository.NewUserCourseRepository(db)
 
 	userService           service.UserService           = service.NewUserService(userRepository)
 	authService           service.AuthService           = service.NewAuthService(userRepository, adminRepository)
 	courseCategoryService service.CourseCategoryService = service.NewCourseCategoryService(courseCategoryRepository)
 	courseService         service.CourseService         = service.NewCourseService(courseRepository)
 	adminService          service.AdminService          = service.NewAdminService(adminRepository)
+	userCourseService     service.UserCourseService     = service.NewUserCourseService(userCourseRepository)
 
 	authController           controller.AuthController           = controller.NewAuthController(authService, userService)
 	userController           controller.UserController           = controller.NewUserController(userService)
 	courseCategoryController controller.CourseCategoryController = controller.NewCourseCategoryController(courseCategoryService)
 	courseController         controller.CourseController         = controller.NewCourseController(courseService)
 	adminController          controller.AdminController          = controller.NewAdminController(adminService)
+	userCourseController     controller.UserCourseController     = controller.NewUserCourseController(userCourseService)
 )
 
 func PingHandler(c *gin.Context) {
@@ -76,14 +79,14 @@ func main() {
 		courseRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
 	}
 
-	attendanceRoutes := r.Group("user-course", middleware.AuthorizeJWT())
+	attendanceRoutes := r.Group("user-courses", middleware.AuthorizeJWT())
 	{
-		attendanceRoutes.GET("/", PingHandler)
-		attendanceRoutes.POST("/", PingHandler)
+		attendanceRoutes.GET("/", userCourseController.FindAll)
+		attendanceRoutes.POST("/", userCourseController.Create)
 		attendanceRoutes.DELETE("/:idUserCourse", PingHandler) //delete their course, cant delete other user course
 	}
 
-	CourseCategoryRoutes := r.Group("course-category")
+	CourseCategoryRoutes := r.Group("course-categories")
 	{
 		CourseCategoryRoutes.GET("/", courseCategoryController.FindAll)
 		CourseCategoryRoutes.GET("/:id", courseCategoryController.FindByID)
