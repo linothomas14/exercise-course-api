@@ -32,10 +32,11 @@ func NewUserController(userService service.UserService) UserController {
 }
 
 func (c *userController) GetProfile(ctx *gin.Context) {
+
 	var user response.UserResponse
 
 	userID := middleware.GetUserIdFromClaims(ctx)
-	userRole := middleware.GetRoleFromClaims(ctx)
+
 	if userID == 0 {
 		response := helper.BuildResponse("there is error occur", helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, response)
@@ -53,7 +54,6 @@ func (c *userController) GetProfile(ctx *gin.Context) {
 		"id":    user.ID,
 		"email": user.Email,
 		"name":  user.Name,
-		"role":  userRole,
 	})
 
 	ctx.JSON(http.StatusOK, response)

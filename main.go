@@ -64,35 +64,36 @@ func main() {
 	}
 	userRoutes := r.Group("users", middleware.AuthorizeJWT())
 	{
-		userRoutes.GET("/", userController.FindAll)
-		userRoutes.GET("/:id", userController.GetUserByID)
-		userRoutes.PUT("/", userController.Update)
-		userRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), userController.Delete)
+		userRoutes.GET("/", middleware.AuthorizeRole([]string{"admin"}), userController.FindAll)
+		userRoutes.GET("/:id", middleware.AuthorizeRole([]string{"admin"}), userController.GetUserByID)
+		userRoutes.GET("/profile", middleware.AuthorizeRole([]string{"user"}), userController.GetProfile)
+		userRoutes.PUT("/", middleware.AuthorizeRole([]string{"user"}), userController.Update)
+		userRoutes.DELETE("/:id", middleware.AuthorizeRole([]string{"admin"}), userController.Delete)
 	}
 
 	courseRoutes := r.Group("courses", middleware.AuthorizeJWT())
 	{
 		courseRoutes.GET("/", courseController.FindAll)
 		courseRoutes.GET("/:id", courseController.FindByID)
-		courseRoutes.POST("/", middleware.AuthorizeJWTAdminOnly(), courseController.Create)
-		courseRoutes.PUT("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
-		courseRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), PingHandler)
+		courseRoutes.POST("/", middleware.AuthorizeRole([]string{"admin"}), courseController.Create)
+		courseRoutes.PUT("/:id", middleware.AuthorizeRole([]string{"admin"}), PingHandler)
+		courseRoutes.DELETE("/:id", middleware.AuthorizeRole([]string{"admin"}), PingHandler)
 	}
 
 	attendanceRoutes := r.Group("user-courses", middleware.AuthorizeJWT())
 	{
-		attendanceRoutes.GET("/", userCourseController.FindAll)
-		attendanceRoutes.POST("/", userCourseController.Create)
-		attendanceRoutes.DELETE("/:idUserCourse", PingHandler) //delete their course, cant delete other user course
+		attendanceRoutes.GET("/", middleware.AuthorizeRole([]string{"admin"}), userCourseController.FindAll)
+		attendanceRoutes.POST("/", userCourseController.Create) //Enroll Course
+		attendanceRoutes.DELETE("/:idUserCourse", PingHandler)  //delete their course, cant delete other user course
 	}
 
 	CourseCategoryRoutes := r.Group("course-categories")
 	{
 		CourseCategoryRoutes.GET("/", courseCategoryController.FindAll)
 		CourseCategoryRoutes.GET("/:id", courseCategoryController.FindByID)
-		CourseCategoryRoutes.POST("/", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Create)
-		CourseCategoryRoutes.PUT("/:id", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Update)
-		CourseCategoryRoutes.DELETE("/:id", middleware.AuthorizeJWTAdminOnly(), courseCategoryController.Delete)
+		CourseCategoryRoutes.POST("/", middleware.AuthorizeRole([]string{"admin"}), courseCategoryController.Create)
+		CourseCategoryRoutes.PUT("/:id", middleware.AuthorizeRole([]string{"admin"}), courseCategoryController.Update)
+		CourseCategoryRoutes.DELETE("/:id", middleware.AuthorizeRole([]string{"admin"}), courseCategoryController.Delete)
 	}
 
 	r.GET("ping", PingHandler)

@@ -55,18 +55,6 @@ func AuthorizeJWT() gin.HandlerFunc {
 
 }
 
-func AuthorizeJWTAdminOnly() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		role := GetRoleFromClaims(c)
-		if role != "admin" {
-			response := helper.BuildResponse("You must be admin to access this endpoint", nil)
-			c.AbortWithStatusJSON(http.StatusUnauthorized, response)
-			return
-		}
-
-	}
-}
-
 func AuthorizeRole(roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		for _, role := range roles {

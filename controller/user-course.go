@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -32,13 +33,15 @@ func NewUserCourseController(userCourseService service.UserCourseService) UserCo
 func (c *userCourseController) Create(ctx *gin.Context) {
 	var reqParam param.UserCourseCreate
 
-	if middleware.GetRoleFromClaims(ctx) != "user" {
-		res := helper.BuildResponse("You cant enroll class because you're admin, not a user", helper.EmptyObj{})
-		ctx.JSON(http.StatusBadRequest, res)
+	err := ctx.ShouldBind(&reqParam)
+
+	if err != nil {
+		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	err := ctx.ShouldBind(&reqParam)
+	err = helper.ValidateStruct(reqParam)
 
 	if err != nil {
 		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
@@ -49,13 +52,12 @@ func (c *userCourseController) Create(ctx *gin.Context) {
 	idUserFromTokenTemp := middleware.GetUserIdFromClaims(ctx)
 	idUserFromToken := uint32(idUserFromTokenTemp)
 
-	reqParam.UserID = idUserFromToken
+	log.Println(reqParam.UserID, idUserFromToken)
+	if reqParam.UserID != idUserFromToken {
 
-	err = helper.ValidateStruct(reqParam)
-
-	if err != nil {
-		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		res := helper.BuildResponse("You cant enroll other user profile", helper.EmptyObj{})
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+
 		return
 	}
 
@@ -67,7 +69,7 @@ func (c *userCourseController) Create(ctx *gin.Context) {
 		return
 	}
 
-	res := helper.BuildResponse("Created", resp)
+	res := helper.BuildResponse("Enrolled", resp)
 	ctx.JSON(http.StatusCreated, res)
 
 }
