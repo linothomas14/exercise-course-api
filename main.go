@@ -53,7 +53,7 @@ func main() {
 	r.POST("/register", authController.Register)
 	r.POST("/login-admin", authController.Login)
 
-	adminRoutes := r.Group("admins", middleware.AuthorizeJWT(), middleware.AuthorizeJWTAdminOnly())
+	adminRoutes := r.Group("admins", middleware.AuthorizeJWT(), middleware.AuthorizeRole([]string{"admin"}))
 	{
 
 		adminRoutes.POST("/", adminController.Register) //register new admin

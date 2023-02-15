@@ -67,6 +67,20 @@ func AuthorizeJWTAdminOnly() gin.HandlerFunc {
 	}
 }
 
+func AuthorizeRole(roles []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		for _, role := range roles {
+			roleFromClaims := GetRoleFromClaims(c)
+			if roleFromClaims != role {
+				response := helper.BuildResponse("You are unouthorize to access this endpoint", nil)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, response)
+				return
+			}
+		}
+
+	}
+}
+
 func GetUserIdFromClaims(ctx *gin.Context) int {
 	userClaims, ok := ctx.Get("user_id")
 	if !ok {

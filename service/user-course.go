@@ -88,18 +88,18 @@ func (service *userCourseService) Delete(id uint32) error {
 	return err
 }
 
-func parseFindAllUserCourse(userCourses []model.UserCourse) []response.UserCourseRes {
-	var parsedUserCourse []response.UserCourseRes
-	for _, userCourse := range userCourses {
-		newCourse := response.UserCourseRes{
-			ID:       userCourse.ID,
-			UserID:   userCourse.UserID,
-			CourseId: userCourse.CourseID,
-		}
-		parsedUserCourse = append(parsedUserCourse, newCourse)
-	}
-	return parsedUserCourse
-}
+// func parseFindAllUserCourse(userCourses []model.UserCourse) []response.UserCourseRes {
+// 	var parsedUserCourse []response.UserCourseRes
+// 	for _, userCourse := range userCourses {
+// 		newCourse := response.UserCourseRes{
+// 			ID:       userCourse.ID,
+// 			UserID:   userCourse.UserID,
+// 			CourseId: userCourse.CourseID,
+// 		}
+// 		parsedUserCourse = append(parsedUserCourse, newCourse)
+// 	}
+// 	return parsedUserCourse
+// }
 
 func parseUserCourse(userParam param.UserCourseCreate) *model.UserCourse {
 	var user model.UserCourse
@@ -109,4 +109,33 @@ func parseUserCourse(userParam param.UserCourseCreate) *model.UserCourse {
 
 	return &user
 
+}
+
+func parseFindAllUserCourse(userCourses []model.UserCourse) []response.UserCourseRes {
+
+	var parsedUserCourse []response.UserCourseRes
+
+	for _, userCourse := range userCourses {
+		newCourse := response.UserCourseRes{
+			ID:     userCourse.ID,
+			UserID: userCourse.UserID,
+			User: response.UserResponse{
+				ID:    userCourse.UserID,
+				Email: userCourse.User.Email,
+				Name:  userCourse.User.Name,
+			},
+			CourseId: userCourse.CourseID,
+			Course: model.Course{
+				ID:               userCourse.Course.ID,
+				Title:            userCourse.Course.Title,
+				CourseCategoryId: userCourse.Course.CourseCategoryId,
+				CourseCategory: model.CourseCategory{
+					ID:   userCourse.Course.CourseCategoryId,
+					Name: userCourse.Course.CourseCategory.Name,
+				},
+			},
+		}
+		parsedUserCourse = append(parsedUserCourse, newCourse)
+	}
+	return parsedUserCourse
 }
