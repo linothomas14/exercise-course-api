@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -120,25 +121,48 @@ func (c *userCourseController) FindAll(ctx *gin.Context) {
 }
 
 func (c *userCourseController) Delete(ctx *gin.Context) {
+	var reqParam param.UserCourseCreate
 
-	id := ctx.Param("id")
+	err := ctx.ShouldBind(&reqParam)
 
-	u64, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	err = helper.ValidateStruct(reqParam)
+
+	if err != nil {
+		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if middleware.GetRoleFromClaims(ctx) != "admin" { // If "user" want to enroll, system will cross-check the id from token and req body must be same.
+
+		idUserFromTokenTemp := middleware.GetUserIdFromClaims(ctx)
+		idUserFromToken := uint32(idUserFromTokenTemp)
+
+		if reqParam.UserID != idUserFromToken {
+
+			res := helper.BuildResponse("You cant enroll other user profile", helper.EmptyObj{})
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+
+			return
+		}
+
+	}
+
+	err = c.userCourseService.Delete(reqParam)
+
 	if err != nil {
 		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	userCourseId := uint32(u64)
 
-	err = c.userCourseService.Delete(userCourseId)
-
-	if err != nil {
-		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
-		ctx.JSON(http.StatusBadRequest, res)
-		return
-	}
-	res := helper.BuildResponse("UserCourse id "+id+" was deleted", helper.EmptyObj{})
+	res := helper.BuildResponse(fmt.Sprintf("Success unenrolled user_id %d from course_id %d", reqParam.UserID, reqParam.CourseID), helper.EmptyObj{})
 	ctx.JSON(http.StatusOK, res)
 
 }

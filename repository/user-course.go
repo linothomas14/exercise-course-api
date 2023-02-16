@@ -11,9 +11,8 @@ type UserCourseRepository interface {
 	IsDuplicateUserCourse(userCourse *model.UserCourse) bool
 	GetUserCourseByID(userCourseID int) (model.UserCourse, error)
 	InsertUserCourse(userCourse *model.UserCourse) (*model.UserCourse, error)
-	UpdateUserCourse(userCourse model.UserCourse) (model.UserCourse, error)
 
-	Delete(uint32) error
+	Delete(userCourse *model.UserCourse) error
 }
 
 type userCourseConnection struct {
@@ -46,11 +45,6 @@ func (db *userCourseConnection) InsertUserCourse(userCourse *model.UserCourse) (
 	return userCourse, err
 }
 
-func (db *userCourseConnection) UpdateUserCourse(userCourse model.UserCourse) (model.UserCourse, error) {
-
-	err := db.connection.Model(&userCourse).Updates(&userCourse).Find(&userCourse).Error
-	return userCourse, err
-}
 func (db *userCourseConnection) IsDuplicateUserCourse(userCourse *model.UserCourse) bool {
 
 	err := db.connection.Table("user_course").Where("user_id = ? AND course_id = ? ", userCourse.UserID, userCourse.CourseID).First(&userCourse).Error
@@ -70,17 +64,9 @@ func (db *userCourseConnection) GetUserCourseByID(userCourseId int) (model.UserC
 	return userCourse, err
 }
 
-func (db *userCourseConnection) Delete(userCourseId uint32) error {
-	var userCourse model.UserCourse
-	userCourse.ID = userCourseId
+func (db *userCourseConnection) Delete(userCourse *model.UserCourse) error {
 
-	err := db.connection.First(&userCourse).Error
-
-	if err != nil {
-		return err
-	}
-
-	err = db.connection.Delete(&userCourse).Error
+	err := db.connection.Where("user_id = ? AND course_id = ? ", userCourse.UserID, userCourse.CourseID).Delete(&userCourse).Error
 
 	return err
 }

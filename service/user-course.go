@@ -13,7 +13,7 @@ type UserCourseService interface {
 	FindAll() ([]response.UserCourseRes, error)
 	GetUserCourseByID(int) (*model.UserCourse, error)
 	CreateUserCourse(userCourse param.UserCourseCreate) (*model.UserCourse, error)
-	Delete(userCourseId uint32) error
+	Delete(userCourse param.UserCourseCreate) error
 }
 
 type userCourseService struct {
@@ -64,10 +64,18 @@ func (service *userCourseService) GetUserCourseByID(ID int) (*model.UserCourse, 
 	return res, nil
 }
 
-func (service *userCourseService) Delete(id uint32) error {
+func (service *userCourseService) Delete(userCourse param.UserCourseCreate) error {
 
-	err := service.userCourseRepository.Delete(id)
+	userCourseToCreate := parseUserCourse(userCourse)
 
+	if !service.userCourseRepository.IsDuplicateUserCourse(userCourseToCreate) {
+		return fmt.Errorf("You not enrolled")
+	}
+
+	err := service.userCourseRepository.Delete(userCourseToCreate)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
