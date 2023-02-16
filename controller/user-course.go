@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/helper"
 	"github.com/linothomas14/exercise-course-api/helper/param"
+	"github.com/linothomas14/exercise-course-api/helper/response"
 	"github.com/linothomas14/exercise-course-api/middleware"
 	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/service"
@@ -78,7 +79,7 @@ func (c *userCourseController) Create(ctx *gin.Context) {
 }
 
 func (c *userCourseController) GetUserCourseByID(ctx *gin.Context) {
-	var userCourse *model.UserCourse
+	var userCourse model.UserCourse
 
 	userCourseID := ctx.Param("id")
 
@@ -98,12 +99,13 @@ func (c *userCourseController) GetUserCourseByID(ctx *gin.Context) {
 
 	userCourse, err = c.userCourseService.GetUserCourseByID(ID)
 
+	parseUserCourse := parseUserCourseRes(userCourse)
 	if err != nil {
 		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	res := helper.BuildResponse("OK", userCourse)
+	res := helper.BuildResponse("OK", parseUserCourse)
 	ctx.JSON(http.StatusOK, res)
 
 }
@@ -165,6 +167,30 @@ func (c *userCourseController) Delete(ctx *gin.Context) {
 	res := helper.BuildResponse(fmt.Sprintf("Success unenrolled user_id %d from course_id %d", reqParam.UserID, reqParam.CourseID), helper.EmptyObj{})
 	ctx.JSON(http.StatusOK, res)
 
+}
+
+func parseUserCourseRes(userCourse model.UserCourse) response.UserCourseRes {
+
+	res := response.UserCourseRes{ID: userCourse.ID,
+		UserID: userCourse.UserID,
+		User: response.UserResponse{
+			ID:    userCourse.UserID,
+			Email: userCourse.User.Email,
+			Name:  userCourse.User.Name,
+		},
+		CourseId: userCourse.CourseID,
+		Course: model.Course{
+			ID:               userCourse.Course.ID,
+			Title:            userCourse.Course.Title,
+			CourseCategoryId: userCourse.Course.CourseCategoryId,
+			CourseCategory: model.CourseCategory{
+				ID:   userCourse.Course.CourseCategoryId,
+				Name: userCourse.Course.CourseCategory.Name,
+			},
+		},
+	}
+
+	return res
 }
 
 func parseUserCourse(userCourseParam param.UserCourseCreate) model.UserCourse {

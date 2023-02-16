@@ -83,11 +83,12 @@ func main() {
 	attendanceRoutes := r.Group("user-courses", middleware.AuthorizeJWT())
 	{
 		attendanceRoutes.GET("/", middleware.AuthorizeRole([]string{"admin"}), userCourseController.FindAll)
+		attendanceRoutes.GET("/:id", middleware.AuthorizeRole([]string{"admin"}), userCourseController.GetUserCourseByID)
 		attendanceRoutes.POST("/", userCourseController.Create)   //Enroll Course
 		attendanceRoutes.DELETE("/", userCourseController.Delete) //delete their course, cant delete other user course
 	}
 
-	CourseCategoryRoutes := r.Group("course-categories")
+	CourseCategoryRoutes := r.Group("course-categories", middleware.AuthorizeJWT())
 	{
 		CourseCategoryRoutes.GET("/", courseCategoryController.FindAll)
 		CourseCategoryRoutes.GET("/:id", courseCategoryController.FindByID)

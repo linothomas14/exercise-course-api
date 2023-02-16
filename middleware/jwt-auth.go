@@ -90,6 +90,7 @@ func GetUserIdFromClaims(ctx *gin.Context) int {
 }
 
 func GetRoleFromClaims(ctx *gin.Context) string {
+
 	userClaims, ok := ctx.Get("role")
 
 	if !ok {

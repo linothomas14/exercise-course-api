@@ -11,7 +11,7 @@ import (
 
 type UserCourseService interface {
 	FindAll() ([]response.UserCourseRes, error)
-	GetUserCourseByID(int) (*model.UserCourse, error)
+	GetUserCourseByID(int) (model.UserCourse, error)
 	CreateUserCourse(userCourse param.UserCourseCreate) (*model.UserCourse, error)
 	Delete(userCourse param.UserCourseCreate) error
 }
@@ -40,7 +40,7 @@ func (service *userCourseService) FindAll() ([]response.UserCourseRes, error) {
 
 func (service *userCourseService) CreateUserCourse(userCourse param.UserCourseCreate) (*model.UserCourse, error) {
 
-	userCourseToCreate := parseUserCourse(userCourse)
+	userCourseToCreate := parseUserCourseParamToModel(userCourse)
 
 	if service.userCourseRepository.IsDuplicateUserCourse(userCourseToCreate) {
 		return nil, fmt.Errorf("You already enrolled on this course")
@@ -53,12 +53,12 @@ func (service *userCourseService) CreateUserCourse(userCourse param.UserCourseCr
 	return res, err
 }
 
-func (service *userCourseService) GetUserCourseByID(ID int) (*model.UserCourse, error) {
+func (service *userCourseService) GetUserCourseByID(ID int) (model.UserCourse, error) {
 
-	res, err := service.GetUserCourseByID(ID)
+	res, err := service.userCourseRepository.GetUserCourseByID(ID)
 
 	if err != nil {
-		return nil, err
+		return model.UserCourse{}, err
 	}
 
 	return res, nil
@@ -66,7 +66,7 @@ func (service *userCourseService) GetUserCourseByID(ID int) (*model.UserCourse, 
 
 func (service *userCourseService) Delete(userCourse param.UserCourseCreate) error {
 
-	userCourseToCreate := parseUserCourse(userCourse)
+	userCourseToCreate := parseUserCourseParamToModel(userCourse)
 
 	if !service.userCourseRepository.IsDuplicateUserCourse(userCourseToCreate) {
 		return fmt.Errorf("You not enrolled")
@@ -92,7 +92,7 @@ func (service *userCourseService) Delete(userCourse param.UserCourseCreate) erro
 // 	return parsedUserCourse
 // }
 
-func parseUserCourse(userParam param.UserCourseCreate) *model.UserCourse {
+func parseUserCourseParamToModel(userParam param.UserCourseCreate) *model.UserCourse {
 	var user model.UserCourse
 
 	user.UserID = userParam.UserID
@@ -107,7 +107,7 @@ func parseFindAllUserCourse(userCourses []model.UserCourse) []response.UserCours
 	var parsedUserCourse []response.UserCourseRes
 
 	for _, userCourse := range userCourses {
-		newCourse := response.UserCourseRes{
+		newUserCourse := response.UserCourseRes{
 			ID:     userCourse.ID,
 			UserID: userCourse.UserID,
 			User: response.UserResponse{
@@ -126,7 +126,7 @@ func parseFindAllUserCourse(userCourses []model.UserCourse) []response.UserCours
 				},
 			},
 		}
-		parsedUserCourse = append(parsedUserCourse, newCourse)
+		parsedUserCourse = append(parsedUserCourse, newUserCourse)
 	}
 	return parsedUserCourse
 }

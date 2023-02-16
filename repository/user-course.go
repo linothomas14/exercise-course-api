@@ -59,7 +59,7 @@ func (db *userCourseConnection) IsDuplicateUserCourse(userCourse *model.UserCour
 }
 func (db *userCourseConnection) GetUserCourseByID(userCourseId int) (model.UserCourse, error) {
 	var userCourse model.UserCourse
-	err := db.connection.Preload("User").Preload("Course").First(&userCourse, userCourseId).Error
+	err := db.connection.Preload("Course.CourseCategory").Preload("User").First(&userCourse, userCourseId).Error
 
 	return userCourse, err
 }
