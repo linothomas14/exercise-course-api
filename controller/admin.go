@@ -76,14 +76,6 @@ func (c *adminController) GetAdminByID(ctx *gin.Context) {
 		return
 	}
 
-	role := middleware.GetRoleFromClaims(ctx)
-
-	if ID == 0 || role != "admin" {
-		response := helper.BuildResponse("there is error occur", helper.EmptyObj{})
-		ctx.JSON(http.StatusBadRequest, response)
-		return
-	}
-
 	admin, err = c.adminService.GetProfile(ID)
 
 	if err != nil {

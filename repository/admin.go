@@ -69,7 +69,11 @@ func (db *adminConnection) FindByEmail(email string) model.Admin {
 
 func (db *adminConnection) GetAdmin(adminId int) (model.Admin, error) {
 	var admin model.Admin
-	err := db.connection.Find(&admin, adminId).Error
+	err := db.connection.First(&admin, adminId).Error
+
+	if err != nil {
+		return model.Admin{}, err
+	}
 	return admin, err
 }
 
