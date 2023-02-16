@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 
@@ -49,16 +48,19 @@ func (c *userCourseController) Create(ctx *gin.Context) {
 		return
 	}
 
-	idUserFromTokenTemp := middleware.GetUserIdFromClaims(ctx)
-	idUserFromToken := uint32(idUserFromTokenTemp)
+	if middleware.GetRoleFromClaims(ctx) != "admin" { // If "user" want to enroll, system will cross-check the id from token and req body must be same.
 
-	log.Println(reqParam.UserID, idUserFromToken)
-	if reqParam.UserID != idUserFromToken {
+		idUserFromTokenTemp := middleware.GetUserIdFromClaims(ctx)
+		idUserFromToken := uint32(idUserFromTokenTemp)
 
-		res := helper.BuildResponse("You cant enroll other user profile", helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		if reqParam.UserID != idUserFromToken {
 
-		return
+			res := helper.BuildResponse("You cant enroll other user profile", helper.EmptyObj{})
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+
+			return
+		}
+
 	}
 
 	resp, err := c.userCourseService.CreateUserCourse(reqParam)

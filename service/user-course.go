@@ -13,7 +13,6 @@ type UserCourseService interface {
 	FindAll() ([]response.UserCourseRes, error)
 	GetUserCourseByID(int) (*model.UserCourse, error)
 	CreateUserCourse(userCourse param.UserCourseCreate) (*model.UserCourse, error)
-	Update(userCourse model.UserCourse) (response.UserCourseRes, error)
 	Delete(userCourseId uint32) error
 }
 
@@ -63,22 +62,6 @@ func (service *userCourseService) GetUserCourseByID(ID int) (*model.UserCourse, 
 	}
 
 	return res, nil
-}
-
-func (service *userCourseService) Update(userCourseParam model.UserCourse) (response.UserCourseRes, error) {
-	var userCourseRes response.UserCourseRes
-
-	userCourse, err := service.userCourseRepository.UpdateUserCourse(userCourseParam)
-
-	if err != nil {
-		return response.UserCourseRes{}, err
-	}
-
-	userCourseRes.ID = userCourse.ID
-	userCourseRes.UserID = userCourse.UserID
-	userCourseRes.CourseId = userCourse.CourseID
-
-	return userCourseRes, nil
 }
 
 func (service *userCourseService) Delete(id uint32) error {
