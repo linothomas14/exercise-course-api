@@ -57,7 +57,7 @@ func main() {
 	{
 
 		adminRoutes.POST("/", adminController.Register) //register new admin
-		adminRoutes.GET("/", adminController.GetProfile)
+		adminRoutes.GET("/", adminController.FindAll)
 		adminRoutes.GET("/:id", adminController.GetAdminByID)
 		adminRoutes.PUT("/:id", PingHandler)
 		adminRoutes.DELETE("/:id", PingHandler)

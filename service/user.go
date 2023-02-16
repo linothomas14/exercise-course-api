@@ -107,12 +107,12 @@ func (service *userService) Delete(id uint32) error {
 func parseFindAllUser(users []model.User) []response.UserResponse {
 	var parsedUser []response.UserResponse
 	for _, user := range users {
-		newCourse := response.UserResponse{
+		newUser := response.UserResponse{
 			ID:    user.ID,
 			Name:  user.Name,
 			Email: user.Email,
 		}
-		parsedUser = append(parsedUser, newCourse)
+		parsedUser = append(parsedUser, newUser)
 	}
 	return parsedUser
 }

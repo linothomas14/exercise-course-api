@@ -16,7 +16,7 @@ type AdminController interface {
 	Register(context *gin.Context)
 	GetProfile(context *gin.Context)
 	GetAdminByID(context *gin.Context)
-	// Update(context *gin.Context)
+	FindAll(context *gin.Context)
 }
 
 type adminController struct {
@@ -27,6 +27,18 @@ func NewAdminController(adminService service.AdminService) AdminController {
 	return &adminController{
 		adminService: adminService,
 	}
+}
+
+func (c *adminController) FindAll(ctx *gin.Context) {
+	admins, err := c.adminService.FindAll()
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.BuildResponse("OK", admins)
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (c *adminController) GetProfile(ctx *gin.Context) {

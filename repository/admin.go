@@ -8,6 +8,7 @@ import (
 
 //AdminRepository is contract what adminRepository can do to db
 type AdminRepository interface {
+	FindAll() ([]model.Admin, error)
 	InsertAdmin(admin *model.Admin) (*model.Admin, error)
 	UpdateAdmin(admin model.Admin) (model.Admin, error)
 	VerifyCredential(email string, password string) interface{}
@@ -25,6 +26,17 @@ func NewAdminRepository(db *gorm.DB) AdminRepository {
 	return &adminConnection{
 		connection: db,
 	}
+}
+
+func (db *adminConnection) FindAll() ([]model.Admin, error) {
+	var admins []model.Admin
+
+	err := db.connection.Find(&admins).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return admins, nil
 }
 
 func (db *adminConnection) InsertAdmin(admin *model.Admin) (*model.Admin, error) {

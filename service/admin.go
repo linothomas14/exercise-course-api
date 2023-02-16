@@ -10,6 +10,7 @@ import (
 
 type AdminService interface {
 	CreateAdmin(admin param.Register) (*model.Admin, error)
+	FindAll() ([]response.AdminResponse, error)
 	FindByEmail(email string) model.Admin
 	Update(admin model.Admin) (response.AdminResponse, error)
 	GetProfile(adminId int) (response.AdminResponse, error)
@@ -26,8 +27,20 @@ func NewAdminService(adminRep repository.AdminRepository) AdminService {
 	}
 }
 
+func (service *adminService) FindAll() ([]response.AdminResponse, error) {
+
+	res, err := service.adminRepository.FindAll()
+
+	if err != nil {
+		return nil, err
+	}
+
+	parseAdmin := parseAdmins(res)
+
+	return parseAdmin, nil
+}
+
 func (service *adminService) CreateAdmin(admin param.Register) (*model.Admin, error) {
-	// var adminToCreate *model.Admin
 
 	adminToCreate := &model.Admin{
 		Name:     admin.Name,
@@ -87,4 +100,18 @@ func (service *adminService) Delete(id uint32) error {
 	err := service.adminRepository.Delete(id)
 
 	return err
+}
+
+func parseAdmins(admins []model.Admin) []response.AdminResponse {
+	var parsedAdmin []response.AdminResponse
+
+	for _, admin := range admins {
+		newAdmin := response.AdminResponse{
+			ID:    admin.ID,
+			Name:  admin.Name,
+			Email: admin.Email,
+		}
+		parsedAdmin = append(parsedAdmin, newAdmin)
+	}
+	return parsedAdmin
 }
