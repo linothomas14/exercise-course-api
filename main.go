@@ -77,7 +77,7 @@ func main() {
 		courseRoutes.GET("/:id", courseController.FindByID)
 		courseRoutes.POST("/", middleware.AuthorizeRole([]string{"admin"}), courseController.Create)
 		courseRoutes.PUT("/:id", middleware.AuthorizeRole([]string{"admin"}), PingHandler)
-		courseRoutes.DELETE("/:id", middleware.AuthorizeRole([]string{"admin"}), PingHandler)
+		courseRoutes.DELETE("/:id", middleware.AuthorizeRole([]string{"admin"}), courseController.Delete)
 	}
 
 	attendanceRoutes := r.Group("user-courses", middleware.AuthorizeJWT())

@@ -15,7 +15,7 @@ type CourseController interface {
 	FindAll(context *gin.Context)
 	FindByID(context *gin.Context)
 	// Update(context *gin.Context)
-	// Delete(context *gin.Context)
+	Delete(context *gin.Context)
 }
 
 type courseController struct {
@@ -103,4 +103,28 @@ func (c *courseController) Create(ctx *gin.Context) {
 
 	response := helper.BuildResponse("OK", res)
 	ctx.JSON(http.StatusCreated, response)
+}
+
+func (c *courseController) Delete(ctx *gin.Context) {
+
+	id := ctx.Param("id")
+
+	u64, err := strconv.ParseUint(id, 10, 32)
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	courseId := uint32(u64)
+
+	err = c.courseService.Delete(courseId)
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+	response := helper.BuildResponse("Course id "+id+" was deleted", helper.EmptyObj{})
+	ctx.JSON(http.StatusOK, response)
+
 }
