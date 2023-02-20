@@ -77,7 +77,7 @@ func (db *courseConnection) FindByName(name string) (model.Course, error) {
 
 func (db *courseConnection) Update(course model.Course) (model.Course, error) {
 
-	err := db.connection.Model(&course).Updates(&course).Find(&course).Error
+	err := db.connection.Model(&course).Updates(&course).Preload("CourseCategory").Find(&course).Error
 
 	if err != nil {
 		return model.Course{}, err
