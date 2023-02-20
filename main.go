@@ -59,8 +59,8 @@ func main() {
 		adminRoutes.POST("/", adminController.Register) //register new admin
 		adminRoutes.GET("/", adminController.FindAll)
 		adminRoutes.GET("/:id", adminController.GetAdminByID)
-		adminRoutes.PUT("/:id", PingHandler)
-		adminRoutes.DELETE("/:id", PingHandler)
+		adminRoutes.PUT("/:id", adminController.Update)
+		adminRoutes.DELETE("/:id", adminController.Delete)
 	}
 	userRoutes := r.Group("users", middleware.AuthorizeJWT())
 	{
