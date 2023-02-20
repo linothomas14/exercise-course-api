@@ -189,7 +189,7 @@ func (c *adminController) Delete(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
-	response := helper.BuildResponse("Course id "+id+" was deleted", helper.EmptyObj{})
+	response := helper.BuildResponse("Admin id "+id+" was deleted", helper.EmptyObj{})
 	ctx.JSON(http.StatusOK, response)
 
 }
