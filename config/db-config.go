@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/linothomas14/exercise-course-api/helper"
 	"github.com/linothomas14/exercise-course-api/model"
 
 	"gorm.io/driver/mysql"
@@ -35,7 +36,7 @@ func SetupDatabaseConnection() *gorm.DB {
 	}
 
 	db.Debug().AutoMigrate(&model.Course{}, &model.User{}, &model.Admin{}, &model.UserCourse{}, &model.CourseCategory{})
-
+	Seeders(db)
 	fmt.Println("Successfully connected!")
 	return db
 }
@@ -47,4 +48,17 @@ func CloseDatabaseConnection(db *gorm.DB) {
 		panic("Failed to close connection to DB")
 	}
 	dbSQL.Close()
+}
+
+func Seeders(db *gorm.DB) {
+	var user model.Admin = model.Admin{
+		Email:    "admin@gmail.com",
+		Name:     "Admin",
+		Password: helper.HashAndSalt([]byte("admin123")),
+	}
+
+	err := db.First(&user, "email = ?", user.Email).Error
+	if err != nil {
+		db.Create(&user)
+	}
 }
