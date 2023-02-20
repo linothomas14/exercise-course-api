@@ -40,7 +40,7 @@ func (db *userCourseConnection) FindAll() ([]model.UserCourse, error) {
 
 func (db *userCourseConnection) InsertUserCourse(userCourse *model.UserCourse) (*model.UserCourse, error) {
 
-	err := db.connection.Save(&userCourse).Error
+	err := db.connection.Preload("Course.CourseCategory").Preload("User").Save(&userCourse).Find(&userCourse).Error
 
 	return userCourse, err
 }

@@ -65,8 +65,8 @@ func (c *userCourseController) Create(ctx *gin.Context) {
 
 	}
 
-	resp, err := c.userCourseService.CreateUserCourse(reqParam)
-
+	userCourse, err := c.userCourseService.CreateUserCourse(reqParam)
+	resp := parseUserCourseRes(*userCourse)
 	if err != nil {
 		res := helper.BuildResponse(err.Error(), helper.EmptyObj{})
 		ctx.JSON(http.StatusBadRequest, res)
