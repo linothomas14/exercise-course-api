@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/linothomas14/exercise-course-api/helper"
+	"github.com/linothomas14/exercise-course-api/helper/param"
 	"github.com/linothomas14/exercise-course-api/model"
 	"github.com/linothomas14/exercise-course-api/service"
 )
@@ -29,17 +30,9 @@ func NewCourseCategoryController(courseCategoryService service.CourseCategorySer
 }
 
 func (c *courseCategoryController) Create(ctx *gin.Context) {
-	var ctg model.CourseCategory
+	var param param.Category
 
-	err := ctx.ShouldBind(&ctg)
-
-	if err != nil {
-		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
-		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
-		return
-	}
-
-	err = helper.ValidateStruct(ctg)
+	err := ctx.ShouldBind(&param)
 
 	if err != nil {
 		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
@@ -47,7 +40,17 @@ func (c *courseCategoryController) Create(ctx *gin.Context) {
 		return
 	}
 
-	res, err := c.courseCategoryService.CreateCourseCategory(ctg)
+	err = helper.ValidateStruct(param)
+
+	if err != nil {
+		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
+		return
+	}
+
+	courseCategory := parseCourseCategory(param)
+
+	res, err := c.courseCategoryService.CreateCourseCategory(courseCategory)
 
 	if err != nil {
 		response := helper.BuildResponse(err.Error(), helper.EmptyObj{})
@@ -163,5 +166,15 @@ func (c *courseCategoryController) Delete(ctx *gin.Context) {
 		res := helper.BuildResponse("Data has been deleted", helper.EmptyObj{})
 		ctx.JSON(http.StatusOK, res)
 	}
+
+}
+
+func parseCourseCategory(courseCategoryParam param.Category) model.CourseCategory {
+
+	var courseCategory model.CourseCategory
+
+	courseCategory.Name = courseCategoryParam.Name
+
+	return courseCategory
 
 }
